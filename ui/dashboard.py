@@ -1,4 +1,3 @@
-import time
 from typing import Optional
 
 from core.models import Order
@@ -10,11 +9,6 @@ class Dashboard:
         self._metrics = metrics
         self._interval = interval
         self._last_order: Optional[Order] = None
-
-    def start(self) -> None:
-        while True:
-            self._render()
-            time.sleep(self._interval)
 
     def update_last_order(self, order: Order) -> None:
         self._last_order = order
