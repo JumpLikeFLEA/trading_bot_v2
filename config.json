@@ -1,0 +1,12 @@
+{
+  "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"],
+  "data_feed": {
+    "period": "5d",
+    "interval": "1h"
+  },
+  "strategies": [
+    {"name": "RSIStrategy", "symbols": ["AAPL", "MSFT"], "active": false},
+    {"name": "RSIStrategy", "symbols": ["GOOGL", "AMZN"], "active": false},
+    {"name": "OpenCloseRankStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": true}
+  ]
+}

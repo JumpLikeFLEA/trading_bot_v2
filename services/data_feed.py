@@ -17,6 +17,15 @@ class DataFeed:
         self._period = period
         self._interval = interval
 
+        self._subindustry_cache: Dict[str, str] = {}
+        for symbol in symbols:
+            try:
+                info = yf.Ticker(symbol).info
+                self._subindustry_cache[symbol] = info.get("industry", "Unknown")
+            except Exception as e:
+                logging.warning(f"Could not fetch subindustry for {symbol}: {e}")
+                self._subindustry_cache[symbol] = "Unknown"
+
     def get_data(self) -> Dict[str, Dict]:
         result = {}
         for symbol in self._symbols:
@@ -31,9 +40,13 @@ class DataFeed:
 
                 price = closes[-1]
 
+                opens = hist["Open"].tolist()
+
                 result[symbol] = {
                     "price": price,
-                    "closes": closes
+                    "closes": closes,
+                    "opens": opens,
+                    "subindustry": self._subindustry_cache.get(symbol, "Unknown")
                 }
             except Exception as e:
                 logging.warning(f"Error fetching data for {symbol}: {e}")

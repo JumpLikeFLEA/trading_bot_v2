@@ -1,11 +1,14 @@
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from core.models import Signal, SignalType
 from core.strategy import Strategy
 
 
 class RSIStrategy(Strategy):
+    def __init__(self, symbols: Optional[List[str]] = None):
+        self._symbols = symbols
+
     @property
     def name(self) -> str:
         return "RSIStrategy"
@@ -39,6 +42,8 @@ class RSIStrategy(Strategy):
     def on_data(self, data: Any) -> List[Signal]:
         signals = []
         for symbol, values in data.items():
+            if self._symbols is not None and symbol not in self._symbols:
+                continue
             closes = values.get("closes")
             if closes is None or len(closes) < 15:
                 logging.warning(f"Insufficient data for {symbol}, emitting HOLD")
