@@ -2,10 +2,10 @@ import logging
 import time
 from typing import Any, List, Optional, Protocol
 
-from adapters.broker import Broker
 from core.models import Order
 from core.strategy import Strategy
 from services.risk_manager import RiskManager
+from services.portfolio import Portfolio
 
 
 class DataFeed(Protocol):
@@ -29,11 +29,12 @@ class Dashboard(Protocol):
 class Engine:
     def __init__(
         self,
-        broker: Broker,
+        broker: Any,
         strategies: List[Strategy],
         risk_manager: RiskManager,
         data_feed: DataFeed,
         metrics: Metrics,
+        portfolio: Portfolio,
         interval: int = 60,
         dashboard: Optional[Dashboard] = None
     ):
@@ -42,6 +43,7 @@ class Engine:
         self.risk_manager = risk_manager
         self.data_feed = data_feed
         self.metrics = metrics
+        self.portfolio = portfolio
         self.interval = interval
         self.dashboard = dashboard
 
@@ -50,6 +52,8 @@ class Engine:
             try:
                 data = self.data_feed.get_data()
                 balance = self.broker.get_balance()
+                positions = self.broker.get_positions()
+                self.portfolio.update(positions)  # needs portfolio passed into Engine
 
                 for strategy in self.strategies:
                     signals = strategy.on_data(data)
@@ -71,3 +75,4 @@ class Engine:
                 time.sleep(self.interval)
             except Exception:
                 logging.exception("Error in engine loop")
+                time.sleep(self.interval)

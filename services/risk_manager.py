@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from core.models import Order, Signal, SignalType
@@ -11,6 +12,12 @@ class RiskManager:
     def evaluate(self, signal: Signal, balance: float, price: float) -> Optional[Order]:
         if signal.type == SignalType.HOLD:
             return None
+
+        if signal.type == SignalType.SELL:
+            position = self._portfolio.get_position(signal.symbol)
+            if position is None or position.quantity <= 0:
+                logging.warning(f"Cannot SELL {signal.symbol}: not owned")
+                return None
 
         position_size = (balance * 0.01) / price
 

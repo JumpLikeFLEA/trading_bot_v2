@@ -51,10 +51,11 @@ class RSIStrategy(Strategy):
                 continue
 
             rsi = self._calculate_rsi(closes)
+            logging.info(f"{symbol} RSI: {rsi:.2f}")
 
-            if rsi < 30:
+            if rsi < 60:
                 signals.append(Signal(symbol=symbol, type=SignalType.BUY))
-            elif rsi > 70:
+            elif rsi > 40:
                 signals.append(Signal(symbol=symbol, type=SignalType.SELL))
             else:
                 signals.append(Signal(symbol=symbol, type=SignalType.HOLD))

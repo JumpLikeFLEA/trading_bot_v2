@@ -21,13 +21,16 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+
     args = parse_args()
     config = load_config("config.json")
     secrets = load_secrets("secrets/secrets.json")
 
     broker = Trading212Broker(
         api_key=secrets["api_key"],
-        secret=secrets["secret"]
+        secret=secrets["secret"],
+        live=config.get("live", False)
     )
 
     data_feed = DataFeed(
@@ -56,6 +59,7 @@ def main():
         risk_manager=risk_manager,
         data_feed=data_feed,
         metrics=metrics,
+        portfolio=portfolio,
         dashboard=dashboard
     )
 
