@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List
 
 from core.strategy import Strategy
-from strategies import RSIStrategy
+from strategies import MACrossoverStrategy, MATrendStrategy, RSIStrategy
 from strategies.open_close_strategy import OpenCloseRankStrategy
 
 
@@ -21,7 +21,11 @@ def build_strategies(strategy_configs: List[Dict], strategy_filter: str = None) 
             if not config.get("active", True):
                 continue
 
-        if name == "RSIStrategy":
+        if name == "MACrossoverStrategy":
+            strategies.append(MACrossoverStrategy(symbols=symbols))
+        elif name == "MATrendStrategy":
+            strategies.append(MATrendStrategy(symbols=symbols))
+        elif name == "RSIStrategy":
             strategies.append(RSIStrategy(symbols=symbols))
         elif name == "OpenCloseRankStrategy":
             strategies.append(OpenCloseRankStrategy(symbols=symbols))

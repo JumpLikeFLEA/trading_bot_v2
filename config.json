@@ -2,12 +2,15 @@
   "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"],
   "live": false,
   "data_feed": {
-    "period": "5d",
+    "period": "3mo",
+    "period_long": "1y",
     "interval": "1h"
   },
   "strategies": [
-    {"name": "RSIStrategy", "symbols": ["AAPL", "MSFT"], "active": true},
+    {"name": "RSIStrategy", "symbols": ["AAPL", "MSFT"], "active": false},
     {"name": "RSIStrategy", "symbols": ["GOOGL", "AMZN"], "active": false},
-    {"name": "OpenCloseRankStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false}
+    {"name": "OpenCloseRankStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false},
+    {"name": "MACrossoverStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": true},
+    {"name": "MATrendStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false} 
   ]
 }
