@@ -2,7 +2,7 @@
 secrets/
 
 # Strategy 
-strategy/
+strategies/
 
 # Python
 __pycache__/
