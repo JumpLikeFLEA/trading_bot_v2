@@ -48,7 +48,7 @@ class Trading212Broker(Broker):
             response = self._get("/equity/positions")
             positions = []
             for item in response:
-                symbol = item["instrument"]["ticker"]
+                symbol = item["instrument"]["ticker"].replace("_US_EQ", "")
                 quantity = float(item["quantity"])
                 entry_price = float(item["averagePricePaid"])
                 positions.append(Position(symbol=symbol, quantity=quantity, entry_price=entry_price))

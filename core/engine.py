@@ -1,9 +1,11 @@
 import logging
+import threading
 import time
 from typing import Any, List, Optional, Protocol
 
 from core.models import Order
 from core.strategy import Strategy
+from services.notifier import Notifier
 from services.risk_manager import RiskManager
 from services.portfolio import Portfolio
 
@@ -36,7 +38,10 @@ class Engine:
         metrics: Metrics,
         portfolio: Portfolio,
         interval: int = 60,
-        dashboard: Optional[Dashboard] = None
+        dashboard: Optional[Dashboard] = None,
+        stop_event: Optional[threading.Event] = None,
+        pause_event: Optional[threading.Event] = None,
+        notifier: Optional[Notifier] = None
     ):
         self.broker = broker
         self.strategies = strategies
@@ -46,9 +51,21 @@ class Engine:
         self.portfolio = portfolio
         self.interval = interval
         self.dashboard = dashboard
+        self.stop_event = stop_event
+        self.pause_event = pause_event
+        self.notifier = notifier
 
     def run(self) -> None:
         while True:
+            if self.stop_event is not None and self.stop_event.is_set():
+                logging.info("Stop signal received, shutting down.")
+                return
+
+            if self.pause_event is not None and self.pause_event.is_set():
+                logging.info("Bot paused, sleeping.")
+                time.sleep(self.interval)
+                continue
+
             try:
                 data = self.data_feed.get_data()
                 balance = self.broker.get_balance()
@@ -65,6 +82,8 @@ class Engine:
 
                             if order is not None:
                                 self.broker.place_order(order)
+                                if self.notifier:
+                                    self.notifier.notify_order(order)
                                 self.metrics.record_trade(order)
                                 if self.dashboard is not None:
                                     self.dashboard.update_last_order(order)
@@ -73,6 +92,8 @@ class Engine:
                     self.dashboard._render()
 
                 time.sleep(self.interval)
-            except Exception:
+            except Exception as e:
                 logging.exception("Error in engine loop")
+                if self.notifier:
+                    self.notifier.notify_error(str(e))
                 time.sleep(self.interval)

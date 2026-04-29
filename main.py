@@ -1,8 +1,9 @@
 import argparse
 import logging
 import sys
+import threading
 
-from adapters import Trading212Broker
+from adapters import TelegramListener, TelegramNotifier, Trading212Broker
 from core import Engine
 from core.strategy_factory import build_strategies
 from services import DataFeed, Metrics, Portfolio, RiskManager, load_config, load_secrets
@@ -27,6 +28,20 @@ def main():
     config = load_config("config.json")
     secrets = load_secrets("secrets/secrets.json")
 
+    # Notifier setup
+    notifier_config = config.get("notifier", {})
+    if notifier_config.get("enabled", False) and notifier_config.get("provider") == "telegram":
+        notifier = TelegramNotifier(
+            bot_token=secrets["bot_token"],
+            chat_id=secrets["chat_id"]
+        )
+    else:
+        notifier = None
+
+    # Control events for Telegram commands
+    stop_event = threading.Event()
+    pause_event = threading.Event()
+
     broker = Trading212Broker(
         api_key=secrets["api_key"],
         secret=secrets["secret"],
@@ -41,6 +56,18 @@ def main():
     metrics = Metrics()
     portfolio = Portfolio()
     risk_manager = RiskManager(portfolio=portfolio)
+    dashboard = Dashboard(metrics=metrics)
+
+    # Start Telegram listener if notifier is enabled
+    if notifier_config.get("enabled", False) and notifier_config.get("provider") == "telegram":
+        listener = TelegramListener(
+            bot_token=secrets["bot_token"],
+            chat_id=secrets["chat_id"],
+            stop_event=stop_event,
+            pause_event=pause_event,
+            dashboard=dashboard
+        )
+        threading.Thread(target=listener.start, daemon=True).start()
 
     # Validate strategy name if provided
     if args.strategy is not None:
@@ -51,8 +78,6 @@ def main():
 
     strategies = build_strategies(config["strategies"], strategy_filter=args.strategy)
 
-    dashboard = Dashboard(metrics=metrics)
-
     engine = Engine(
         broker=broker,
         strategies=strategies,
@@ -60,7 +85,10 @@ def main():
         data_feed=data_feed,
         metrics=metrics,
         portfolio=portfolio,
-        dashboard=dashboard
+        dashboard=dashboard,
+        notifier=notifier,
+        stop_event=stop_event,
+        pause_event=pause_event
     )
 
     engine.run()

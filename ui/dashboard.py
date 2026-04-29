@@ -13,16 +13,18 @@ class Dashboard:
     def update_last_order(self, order: Order) -> None:
         self._last_order = order
 
-    def _render(self) -> None:
+    def get_summary(self) -> str:
         summary = self._metrics.summary()
         total_trades = summary.get("total_trades", 0)
 
-        print(f"\n--- Dashboard ---")
-        print(f"Total Trades: {total_trades}")
-
         if self._last_order:
-            print(f"Last Order: {self._last_order.side.upper()} {self._last_order.quantity} {self._last_order.symbol}")
+            last_order_str = f"{self._last_order.side.upper()} {self._last_order.quantity} {self._last_order.symbol}"
         else:
-            print("Last Order: None")
+            last_order_str = "None"
 
+        return f"Total Trades: {total_trades}\nLast Order: {last_order_str}"
+
+    def _render(self) -> None:
+        print(f"\n--- Dashboard ---")
+        print(self.get_summary())
         print("-----------------")
