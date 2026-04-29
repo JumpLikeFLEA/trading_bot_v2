@@ -1,6 +1,9 @@
 # Secrets
 secrets/
 
+# Strategy 
+strategy/
+
 # Python
 __pycache__/
 *.pyc

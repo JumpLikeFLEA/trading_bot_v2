@@ -11,10 +11,11 @@
     "interval": "1h"
   },
   "strategies": [
-    {"name": "RSIStrategy", "symbols": ["AAPL", "MSFT"], "active": true},
+    {"name": "RSIStrategy", "symbols": ["AAPL", "MSFT"], "active": false},
     {"name": "RSIStrategy", "symbols": ["GOOGL", "AMZN"], "active": false},
+    {"name": "RSIStrategy", "symbols": ["AAPL", "MSFT","GOOGL", "AMZN"], "active": false},
     {"name": "OpenCloseRankStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false},
     {"name": "MACrossoverStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false},
-    {"name": "MATrendStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false} 
+    {"name": "MATrendStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": true} 
   ]
 }
