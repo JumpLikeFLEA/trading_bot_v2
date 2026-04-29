@@ -41,11 +41,17 @@ class DataFeed:
                 price = closes[-1]
 
                 opens = hist["Open"].tolist()
+                highs = hist["High"].tolist()
+                lows = hist["Low"].tolist()
+                volumes = hist["Volume"].tolist()
 
                 result[symbol] = {
                     "price": price,
                     "closes": closes,
                     "opens": opens,
+                    "highs": highs,
+                    "lows": lows,
+                    "volumes": volumes,
                     "subindustry": self._subindustry_cache.get(symbol, "Unknown")
                 }
             except Exception as e:

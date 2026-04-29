@@ -18,6 +18,24 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Override config and run only the specified strategy"
     )
+    parser.add_argument(
+        "--period",
+        type=str,
+        default=None,
+        help="Override data feed period (e.g., 1d, 1wk, 1mo, 3mo, 6mo, 1y)"
+    )
+    parser.add_argument(
+        "--interval",
+        type=str,
+        default=None,
+        help="Override data feed interval (e.g., 15m, 1h, 1d)"
+    )
+    parser.add_argument(
+        "--symbols",
+        nargs="+",
+        default=None,
+        help="Override symbols list (space-separated tickers)"
+    )
     return parser.parse_args()
 
 
@@ -26,6 +44,15 @@ def main():
 
     args = parse_args()
     config = load_config("config.json")
+
+    # Apply CLI overrides to config
+    if args.period is not None:
+        config["data_feed"]["period"] = args.period
+    if args.interval is not None:
+        config["data_feed"]["interval"] = args.interval
+    if args.symbols is not None:
+        config["symbols"] = args.symbols
+
     secrets = load_secrets("secrets/secrets.json")
 
     # Notifier setup

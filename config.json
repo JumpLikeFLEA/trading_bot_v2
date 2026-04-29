@@ -16,6 +16,7 @@
     {"name": "RSIStrategy", "symbols": ["AAPL", "MSFT","GOOGL", "AMZN"], "active": false},
     {"name": "OpenCloseRankStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false},
     {"name": "MACrossoverStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false},
-    {"name": "MATrendStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": true} 
+    {"name": "MATrendStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false}, 
+    {"name": "VWAPEMAStrategy", "symbols": ["AAPL","MSFT","GOOGL","AMZN"], "active": true, "params": {"fast_period": 9, "slow_period": 21}}
   ]
 }

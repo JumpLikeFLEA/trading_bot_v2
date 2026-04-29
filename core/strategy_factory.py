@@ -4,6 +4,7 @@ from typing import Dict, List
 from core.strategy import Strategy
 from strategies import MACrossoverStrategy, MATrendStrategy, RSIStrategy
 from strategies.open_close_strategy import OpenCloseRankStrategy
+from strategies.vwap_ema_strategy import VWAPEMAStrategy
 
 
 def build_strategies(strategy_configs: List[Dict], strategy_filter: str = None) -> List[Strategy]:
@@ -29,6 +30,9 @@ def build_strategies(strategy_configs: List[Dict], strategy_filter: str = None) 
             strategies.append(RSIStrategy(symbols=symbols))
         elif name == "OpenCloseRankStrategy":
             strategies.append(OpenCloseRankStrategy(symbols=symbols))
+        elif name == "VWAPEMAStrategy":
+            params = config.get("params", {})
+            strategies.append(VWAPEMAStrategy(symbols=symbols, fast_period=params.get("fast_period", 9), slow_period=params.get("slow_period", 21)))
         else:
             logging.warning(f"Unrecognised strategy name: {name}, skipping")
 
