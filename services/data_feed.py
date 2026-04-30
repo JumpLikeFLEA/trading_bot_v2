@@ -28,34 +28,66 @@ class DataFeed:
 
     def get_data(self) -> Dict[str, Dict]:
         result = {}
-        for symbol in self._symbols:
-            try:
-                ticker = yf.Ticker(symbol)
-                hist = ticker.history(period=self._period, interval=self._interval)
+        try:
+            data = yf.download(
+                self._symbols,
+                period=self._period,
+                interval=self._interval,
+                group_by="ticker",
+                threads=True,
+                progress=False
+            )
 
-                closes = hist["Close"].tolist()
+            if data.empty:
+                logging.warning("No data received from yfinance download")
+                return result
+
+            # Single ticker case: yfinance returns flat DataFrame
+            if len(self._symbols) == 1:
+                symbol = self._symbols[0]
+                closes = data["Close"].dropna().tolist()
                 if len(closes) == 0:
                     logging.warning(f"No data for {symbol}, skipping")
-                    continue
-
-                price = closes[-1]
-
-                opens = hist["Open"].tolist()
-                highs = hist["High"].tolist()
-                lows = hist["Low"].tolist()
-                volumes = hist["Volume"].tolist()
+                    return result
 
                 result[symbol] = {
-                    "price": price,
+                    "price": closes[-1],
                     "closes": closes,
-                    "opens": opens,
-                    "highs": highs,
-                    "lows": lows,
-                    "volumes": volumes,
+                    "opens": data["Open"].dropna().tolist(),
+                    "highs": data["High"].dropna().tolist(),
+                    "lows": data["Low"].dropna().tolist(),
+                    "volumes": data["Volume"].dropna().tolist(),
                     "subindustry": self._subindustry_cache.get(symbol, "Unknown")
                 }
-            except Exception as e:
-                logging.warning(f"Error fetching data for {symbol}: {e}")
-                continue
+                return result
+
+            # Multi-ticker case: DataFrame has MultiIndex (ticker, column)
+            for symbol in self._symbols:
+                try:
+                    if symbol not in data.columns.levels[0]:
+                        logging.warning(f"No data received for {symbol}, skipping")
+                        continue
+
+                    ticker_data = data[symbol]
+                    closes = ticker_data["Close"].dropna().tolist()
+                    if len(closes) == 0:
+                        logging.warning(f"No data for {symbol}, skipping")
+                        continue
+
+                    result[symbol] = {
+                        "price": closes[-1],
+                        "closes": closes,
+                        "opens": ticker_data["Open"].dropna().tolist(),
+                        "highs": ticker_data["High"].dropna().tolist(),
+                        "lows": ticker_data["Low"].dropna().tolist(),
+                        "volumes": ticker_data["Volume"].dropna().tolist(),
+                        "subindustry": self._subindustry_cache.get(symbol, "Unknown")
+                    }
+                except Exception as e:
+                    logging.warning(f"Error processing data for {symbol}: {e}")
+                    continue
+
+        except Exception as e:
+            logging.warning(f"Error fetching data via yf.download: {e}")
 
         return result

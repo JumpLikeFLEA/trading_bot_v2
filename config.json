@@ -1,5 +1,5 @@
 {
-  "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"],
+  "symbols": ["AAPL","MSFT","GOOGL","AMZN","NVDA","META","TSLA","AMD","PLTR","BAC","F","INTC","T","PFE","XOM","SOFI","CCL","NIO","RIVN","SMCI"],
   "live": false,
   "notifier": {
     "provider": "telegram",
@@ -17,6 +17,6 @@
     {"name": "OpenCloseRankStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false},
     {"name": "MACrossoverStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false},
     {"name": "MATrendStrategy", "symbols": ["AAPL", "MSFT", "GOOGL", "AMZN"], "active": false}, 
-    {"name": "VWAPEMAStrategy", "symbols": ["AAPL","MSFT","GOOGL","AMZN"], "active": true, "params": {"fast_period": 9, "slow_period": 21}}
+    {"name": "VWAPEMAStrategy", "symbols": ["AAPL","MSFT","GOOGL","AMZN","NVDA","META","TSLA","AMD","PLTR","BAC","F","INTC","T","PFE","XOM","SOFI","CCL","NIO","RIVN","SMCI"], "active": true, "params": {"fast_period": 9, "slow_period": 21}}
   ]
 }

@@ -32,9 +32,9 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--symbols",
-        nargs="+",
+        type=str,
         default=None,
-        help="Override symbols list (space-separated tickers)"
+        help="Override symbols list (comma-separated tickers, e.g., 'AAPL,MSFT,GOOGL')"
     )
     return parser.parse_args()
 
@@ -51,7 +51,11 @@ def main():
     if args.interval is not None:
         config["data_feed"]["interval"] = args.interval
     if args.symbols is not None:
-        config["symbols"] = args.symbols
+        symbols_list = [s.strip() for s in args.symbols.split(",")]
+        config["symbols"] = symbols_list
+        # Propagate to all strategies so they use the same symbol list
+        for strategy_config in config.get("strategies", []):
+            strategy_config["symbols"] = symbols_list
 
     secrets = load_secrets("secrets/secrets.json")
 
