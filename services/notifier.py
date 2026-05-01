@@ -18,3 +18,8 @@ class Notifier(ABC):
     def notify_error(self, error: str) -> None:
         """Notify about an engine error."""
         ...
+
+    @abstractmethod
+    def notify_summary(self, summary: str) -> None:
+        """Send a dashboard summary."""
+        ...

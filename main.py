@@ -96,7 +96,8 @@ def main():
             chat_id=secrets["chat_id"],
             stop_event=stop_event,
             pause_event=pause_event,
-            dashboard=dashboard
+            dashboard=dashboard,
+            notifier=notifier
         )
         threading.Thread(target=listener.start, daemon=True).start()
 

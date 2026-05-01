@@ -75,10 +75,13 @@ class Engine:
                 for strategy in self.strategies:
                     signals = strategy.on_data(data)
                     for symbol, signal_data in data.items():
+                        current_price = signal_data["price"]
                         for signal in signals:
                             if signal.symbol != symbol:
                                 continue
-                            order = self.risk_manager.evaluate(signal, balance, signal_data["price"])
+                            if self.dashboard is not None:
+                                self.dashboard.update_signal(symbol, signal.type, current_price)
+                            order = self.risk_manager.evaluate(signal, balance, current_price)
 
                             if order is not None:
                                 self.broker.place_order(order)
@@ -86,9 +89,10 @@ class Engine:
                                     self.notifier.notify_order(order)
                                 self.metrics.record_trade(order)
                                 if self.dashboard is not None:
-                                    self.dashboard.update_last_order(order)
+                                    self.dashboard.update_last_order(order, current_price)
 
                 if self.dashboard is not None:
+                    self.dashboard.increment_cycle()
                     self.dashboard._render()
 
                 time.sleep(self.interval)

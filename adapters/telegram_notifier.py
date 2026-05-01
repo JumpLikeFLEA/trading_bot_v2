@@ -1,4 +1,5 @@
 import logging
+import re
 
 import requests
 
@@ -29,3 +30,8 @@ class TelegramNotifier(Notifier):
     def notify_error(self, error: str) -> None:
         message = f"ERROR: {error}"
         self._send(message)
+
+    def notify_summary(self, summary: str) -> None:
+        # Strip ANSI escape codes for Telegram
+        clean_summary = re.sub(r'\033\[[0-9;]*m', '', summary)
+        self._send(clean_summary)

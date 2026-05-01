@@ -1,5 +1,5 @@
 from collections import deque
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Any, Dict, Optional, Tuple
 
 from core.models import Order, SignalType
@@ -15,15 +15,14 @@ class Dashboard:
         self._orders: deque = deque(maxlen=10)
         self._signals: Dict[str, Tuple[SignalType, float]] = {}
         self._last_order: Optional[Order] = None
-        self._line_count = 0
 
-    def update_last_order(self, order: Order) -> None:
+    def update_last_order(self, order: Order, price: float = 0.0) -> None:
         self._last_order = order
         self._orders.append({
             "symbol": order.symbol,
             "side": order.side,
             "quantity": order.quantity,
-            "price": order.price if hasattr(order, "price") else 0.0,
+            "price": order.price if hasattr(order, "price") and order.price else price,
             "timestamp": datetime.now().strftime("%H:%M:%S")
         })
 
@@ -56,10 +55,6 @@ class Dashboard:
         reset = "\033[0m"
         return f"{colors.get(signal, '\033[37m')}{signal.value}{reset}"
 
-    def _format_box_line(self, left: str, right: str, width: int = 78) -> str:
-        middle = width - len(left) - len(right) - 2
-        return f"│ {left}{' ' * middle}{right} │"
-
     def get_summary(self) -> str:
         summary = self._metrics.summary()
         total_trades = summary.get("total_trades", 0)
@@ -69,69 +64,43 @@ class Dashboard:
         uptime = self._get_uptime()
 
         lines = []
-        lines.append("┌──────────────────────────────────────────────────────────────────────────────┐")
-        lines.append(self._format_box_line("🤖 Trading Bot", f"Uptime: {uptime}"))
-        lines.append("├──────────────────────────────────────────────────────────────────────────────┤")
-        lines.append(self._format_box_line(
-            f"Cycles: {self._cycle_count} | Trades: {total_trades} | Win Rate: {win_rate}",
-            f"Portfolio: {portfolio_value} | P&L: {pnl}"
-        ))
-        lines.append("├──────────────────────────────────────────────────────────────────────────────┤")
-        lines.append(self._format_box_line("📦 Recent Orders", ""))
-        lines.append("├──────────────────────────────────────────────────────────────────────────────┤")
 
-        # Recent orders header
-        lines.append(f"│ {'Side':<6} {'Qty':<10} {'Symbol':<8} {'Price':<10} {'Time':<10} {'':>30} │")
+        # Header
+        lines.append(f"Trading Bot    Uptime: {uptime}")
+        lines.append("")
 
-        # Last 5 orders
+        # Stats
+        lines.append(f"Cycles: {self._cycle_count}")
+        lines.append(f"Trades: {total_trades}")
+        lines.append(f"Win Rate: {win_rate}")
+        lines.append(f"Portfolio: {portfolio_value}")
+        lines.append(f"P&L: {pnl}")
+        lines.append("")
+
+        # Recent Orders
+        lines.append("Recent Orders:")
         recent_orders = list(self._orders)[-5:]
         if recent_orders:
             for order in reversed(recent_orders):
-                side_color = "\033[32m" if order["side"].upper() == "BUY" else "\033[31m"
-                reset = "\033[0m"
-                side_str = f"{side_color}{order['side'].upper():<6}{reset}"
+                side = order["side"].upper()
                 qty_str = f"{order['quantity']:.4f}" if isinstance(order['quantity'], float) else str(order['quantity'])
                 price_str = f"${order['price']:.2f}" if order['price'] else "$0.00"
-                line = f"│ {side_str} {qty_str:<10} {order['symbol']:<8} {price_str:<10} {order['timestamp']:<10} {'':>22} │"
-                lines.append(line)
+                lines.append(f"  {side} {qty_str} {order['symbol']} @ {price_str} [{order['timestamp']}]")
         else:
-            lines.append(self._format_box_line("No orders yet", ""))
+            lines.append("  No orders yet")
+        lines.append("")
 
-        # Pad to 5 lines
-        while len([l for l in lines if "│" in l and "Side" not in l and "Orders" not in l and "───" not in l]) < 6 + len(recent_orders):
-            lines.append(self._format_box_line("", ""))
-
-        lines.append("├──────────────────────────────────────────────────────────────────────────────┤")
-        lines.append(self._format_box_line("📊 Active Signals", f"({len(self._signals)} symbols)"))
-        lines.append("├──────────────────────────────────────────────────────────────────────────────┤")
-
-        # Signals grid - 4 columns
+        # Active Signals
+        lines.append("Active Signals:")
         if self._signals:
-            signal_items = list(self._signals.items())
-            for i in range(0, len(signal_items), 4):
-                row_items = signal_items[i:i+4]
-                row_parts = []
-                for symbol, (signal, price) in row_items:
-                    colored = self._color_signal(signal)
-                    reset = "\033[0m"
-                    cell = f"{symbol}: {colored}{reset}"
-                    row_parts.append(cell)
-                row = " | ".join(row_parts)
-                padding = 76 - len(row.replace("\033[32m", "").replace("\033[31m", "").replace("\033[37m", "").replace("\033[0m", ""))
-                lines.append(f"│ {row}{' ' * padding} │")
+            for symbol, (signal, price) in self._signals.items():
+                colored_signal = self._color_signal(signal)
+                reset = "\033[0m"
+                lines.append(f"  {symbol}: {colored_signal}{reset}")
         else:
-            lines.append(self._format_box_line("No signals yet", ""))
-
-        lines.append("└──────────────────────────────────────────────────────────────────────────────┘")
+            lines.append("  No signals yet")
 
         return "\n".join(lines)
 
     def _render(self) -> None:
-        # Clear previous render using ANSI escape codes
-        if self._line_count > 0:
-            for _ in range(self._line_count):
-                print("\033[F\033[K", end="")
-
-        summary = self.get_summary()
-        print(summary)
-        self._line_count = summary.count("\n") + 1
+        print(self.get_summary())

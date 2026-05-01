@@ -5,14 +5,17 @@ from typing import Any, Optional
 
 import requests
 
+from services.notifier import Notifier
+
 
 class TelegramListener:
-    def __init__(self, bot_token: str, chat_id: str, stop_event: threading.Event, pause_event: threading.Event, dashboard: Optional[Any] = None):
+    def __init__(self, bot_token: str, chat_id: str, stop_event: threading.Event, pause_event: threading.Event, dashboard: Optional[Any] = None, notifier: Optional[Notifier] = None):
         self._bot_token = bot_token
         self._chat_id = chat_id
         self._stop_event = stop_event
         self._pause_event = pause_event
         self._dashboard = dashboard
+        self._notifier = notifier
         self._base_url = f"https://api.telegram.org/bot{bot_token}"
         self._offset: Optional[int] = None
 
@@ -40,10 +43,10 @@ class TelegramListener:
             else:
                 self._send_message("Bot is running.")
         elif command == "/summary":
-            if self._dashboard is not None:
-                self._send_message(self._dashboard.get_summary())
+            if self._notifier is not None and self._dashboard is not None:
+                self._notifier.notify_summary(self._dashboard.get_summary())
             else:
-                self._send_message("Dashboard not available.")
+                self._send_message("Summary not available.")
 
     def _drain_updates(self) -> None:
         try:
