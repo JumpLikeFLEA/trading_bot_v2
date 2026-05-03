@@ -37,6 +37,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Override symbols list (comma-separated tickers, e.g., 'AAPL,MSFT,GOOGL')"
     )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="Bypass strategy is_active() checks, run all strategies regardless of time"
+    )
     return parser.parse_args()
 
 
@@ -135,7 +141,8 @@ def main():
         dashboard=dashboard,
         notifier=notifier,
         stop_event=stop_event,
-        pause_event=pause_event
+        pause_event=pause_event,
+        dry_run=args.dry_run
     )
 
     engine.run()

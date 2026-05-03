@@ -45,7 +45,8 @@ class Engine:
         dashboard: Optional[Dashboard] = None,
         stop_event: Optional[threading.Event] = None,
         pause_event: Optional[threading.Event] = None,
-        notifier: Optional[Notifier] = None
+        notifier: Optional[Notifier] = None,
+        dry_run: bool = False
     ):
         self.broker = broker
         self.strategies = strategies
@@ -58,6 +59,7 @@ class Engine:
         self.stop_event = stop_event
         self.pause_event = pause_event
         self.notifier = notifier
+        self.dry_run = dry_run
         now = datetime.now(timezone.utc)
         self._was_active: dict = {strategy.name: strategy.is_active(now) for strategy in strategies}
 
@@ -89,7 +91,7 @@ class Engine:
                 self.metrics.update_portfolio_snapshot(portfolio_value, unrealized_pnl)
 
                 for strategy in self.strategies:
-                    is_active = strategy.is_active(now)
+                    is_active = True if self.dry_run else strategy.is_active(now)
                     was_active = self._was_active.get(strategy.name, True)
 
                     if is_active and not was_active:
