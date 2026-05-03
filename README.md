@@ -13,6 +13,17 @@ A modular, extensible trading bot framework built in Python. The architecture fo
 - **Metrics**: Records executed trades
 - **Notifier**: Telegram integration for order notifications and error alerts
 - **Telegram Listener**: Remote bot control via commands (/stop, /pause, /resume, /status, /summary)
+- **Universe**: Pre-defined ticker lists (S&P 500, NASDAQ 100) for strategy backtesting and execution
+
+## Universe Files
+
+The bot includes pre-built universe files containing ticker lists for major indices:
+
+- **`universes/sp500.json`** — 503 S&P 500 constituent tickers
+- **`universes/nasdaq100.json`** — 101 NASDAQ 100 constituent tickers
+- **`universes/test.json`** — Small test list (5 tickers: AAPL, MSFT, GOOGL, AMZN, NVDA)
+
+Use the `--universe` CLI argument to load symbols from a universe file instead of specifying them manually:
 
 ## Deployment
 
@@ -46,6 +57,29 @@ A modular, extensible trading bot framework built in Python. The architecture fo
    ```bash
    python main.py --strategy MACrossoverStrategy
    ```
+
+   To use a pre-built universe (e.g., S&P 500):
+   ```bash
+   python main.py --universe sp500
+   ```
+
+   To run with a specific strategy and universe:
+   ```bash
+   python main.py --strategy RSIStrategy --universe test
+   ```
+
+## CLI Arguments
+
+| Argument | Description | Example |
+|----------|-------------|---------|
+| `--strategy` | Run only the specified strategy | `--strategy RSIStrategy` |
+| `--period` | Override data feed period | `--period 1y` |
+| `--interval` | Override data feed interval | `--interval 1d` |
+| `--symbols` | Override symbols list (comma-separated) | `--symbols AAPL,MSFT,GOOGL` |
+| `--universe` | Load symbols from universe file | `--universe nasdaq100` |
+| `--dry-run` | Run all strategies regardless of time | `--dry-run` |
+
+**Note:** `--universe` and `--symbols` are mutually exclusive. Use one or the other, not both.
 
 ## Running Different Strategies with Custom Parameters
 

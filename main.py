@@ -5,8 +5,10 @@ import threading
 
 from adapters import TelegramListener, TelegramNotifier, Trading212Broker
 from core import Engine
+from core.dry_run_strategy import DryRunStrategy
 from core.strategy_factory import build_strategies
 from services import DataFeed, Metrics, Portfolio, RiskManager, load_config, load_secrets
+from services.universe import load_universe
 from services.risk_manager import MaxDailyLossRule, MaxSectorExposureRule, MaxSymbolExposureRule, NoDoublePositionRule
 from ui import Dashboard
 
@@ -43,6 +45,12 @@ def parse_args() -> argparse.Namespace:
         default=False,
         help="Bypass strategy is_active() checks, run all strategies regardless of time"
     )
+    parser.add_argument(
+        "--universe",
+        type=str,
+        default=None,
+        help="Load symbols from a universe file (e.g. sp500, nasdaq100, test). Looks up universes/{name}.json"
+    )
     return parser.parse_args()
 
 
@@ -57,7 +65,20 @@ def main():
         config["data_feed"]["period"] = args.period
     if args.interval is not None:
         config["data_feed"]["interval"] = args.interval
-    if args.symbols is not None:
+
+    # Handle universe and symbols (mutually exclusive)
+    if args.universe is not None and args.symbols is not None:
+        logging.error("--universe and --symbols are mutually exclusive. Please provide only one.")
+        sys.exit(1)
+
+    if args.universe is not None:
+        universe_path = f"universes/{args.universe}.json"
+        symbols_list = load_universe(universe_path)
+        config["symbols"] = symbols_list
+        for strategy_config in config.get("strategies", []):
+            strategy_config["symbols"] = symbols_list
+        logging.info(f"Loaded {len(symbols_list)} symbols from universe: {args.universe}")
+    elif args.symbols is not None:
         symbols_list = [s.strip() for s in args.symbols.split(",")]
         config["symbols"] = symbols_list
         # Propagate to all strategies so they use the same symbol list
@@ -131,6 +152,9 @@ def main():
 
     strategies = build_strategies(config["strategies"], strategy_filter=args.strategy)
 
+    if args.dry_run:
+        strategies = [DryRunStrategy(s) for s in strategies]
+
     engine = Engine(
         broker=broker,
         strategies=strategies,
@@ -141,8 +165,7 @@ def main():
         dashboard=dashboard,
         notifier=notifier,
         stop_event=stop_event,
-        pause_event=pause_event,
-        dry_run=args.dry_run
+        pause_event=pause_event
     )
 
     engine.run()
