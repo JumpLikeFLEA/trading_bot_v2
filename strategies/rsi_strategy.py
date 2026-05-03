@@ -6,8 +6,11 @@ from core.strategy import Strategy
 
 
 class RSIStrategy(Strategy):
-    def __init__(self, symbols: Optional[List[str]] = None):
+    def __init__(self, symbols: Optional[List[str]] = None, period: int = 14, oversold: float = 30, overbought: float = 70):
         self._symbols = symbols
+        self._period = period
+        self._oversold = oversold
+        self._overbought = overbought
 
     @property
     def name(self) -> str:
@@ -45,17 +48,17 @@ class RSIStrategy(Strategy):
             if self._symbols is not None and symbol not in self._symbols:
                 continue
             closes = values.get("closes")
-            if closes is None or len(closes) < 15:
+            if closes is None or len(closes) < self._period + 1:
                 logging.warning(f"Insufficient data for {symbol}, emitting HOLD")
                 signals.append(Signal(symbol=symbol, type=SignalType.HOLD))
                 continue
 
-            rsi = self._calculate_rsi(closes)
+            rsi = self._calculate_rsi(closes, self._period)
             logging.info(f"{symbol} RSI: {rsi:.2f}")
 
-            if rsi < 30:
+            if rsi < self._oversold:
                 signals.append(Signal(symbol=symbol, type=SignalType.BUY))
-            elif rsi > 70:
+            elif rsi > self._overbought:
                 signals.append(Signal(symbol=symbol, type=SignalType.SELL))
             else:
                 signals.append(Signal(symbol=symbol, type=SignalType.HOLD))

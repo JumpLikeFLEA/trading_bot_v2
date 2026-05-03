@@ -6,10 +6,10 @@ from core.strategy import Strategy
 
 
 class MATrendStrategy(Strategy):
-    def __init__(self, symbols: Optional[List[str]] = None):
+    def __init__(self, symbols: Optional[List[str]] = None, fast: int = 50, slow: int = 200):
         self._symbols = symbols
-        self._fast: int = 50
-        self._slow: int = 200
+        self._fast = fast
+        self._slow = slow
 
     @property
     def name(self) -> str:

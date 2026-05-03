@@ -22,16 +22,16 @@ def build_strategies(strategy_configs: List[Dict], strategy_filter: str = None) 
             if not config.get("active", True):
                 continue
 
+        params = config.get("params", {})
         if name == "MACrossoverStrategy":
-            strategies.append(MACrossoverStrategy(symbols=symbols))
+            strategies.append(MACrossoverStrategy(symbols=symbols, **params))
         elif name == "MATrendStrategy":
-            strategies.append(MATrendStrategy(symbols=symbols))
+            strategies.append(MATrendStrategy(symbols=symbols, **params))
         elif name == "RSIStrategy":
-            strategies.append(RSIStrategy(symbols=symbols))
+            strategies.append(RSIStrategy(symbols=symbols, **params))
         elif name == "OpenCloseRankStrategy":
-            strategies.append(OpenCloseRankStrategy(symbols=symbols))
+            strategies.append(OpenCloseRankStrategy(symbols=symbols, **params))
         elif name == "VWAPEMAStrategy":
-            params = config.get("params", {})
             strategies.append(VWAPEMAStrategy(symbols=symbols, fast_period=params.get("fast_period", 9), slow_period=params.get("slow_period", 21)))
         else:
             logging.warning(f"Unrecognised strategy name: {name}, skipping")

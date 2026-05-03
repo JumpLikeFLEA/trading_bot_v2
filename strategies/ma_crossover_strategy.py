@@ -6,10 +6,10 @@ from core.strategy import Strategy
 
 
 class MACrossoverStrategy(Strategy):
-    def __init__(self, symbols: Optional[List[str]] = None):
+    def __init__(self, symbols: Optional[List[str]] = None, fast: int = 10, slow: int = 50):
         self._symbols = symbols
-        self._fast: int = 10
-        self._slow: int = 50
+        self._fast = fast
+        self._slow = slow
 
     @property
     def name(self) -> str:

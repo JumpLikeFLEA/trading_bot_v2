@@ -18,18 +18,23 @@ class OpenCloseRankStrategy(Strategy):
     Pasteurization : True  – outlier scores are winsorized before ranking
     """
 
-    # ------------------------------------------------------------------ #
-    #  Config                                                              #
-    # ------------------------------------------------------------------ #
-    DECAY: int = 7
-    TRUNCATION: float = 0.05
-    PASTEURIZE: bool = True
-    WINSOR_LIMIT: float = 0.025          # 2.5 % tails clipped each side
-    BUY_QUANTILE: float = 0.70           # top 30 % → BUY
-    SELL_QUANTILE: float = 0.30          # bottom 30 % → SELL
-
-    def __init__(self, symbols: Optional[List[str]] = None):
+    def __init__(
+        self,
+        symbols: Optional[List[str]] = None,
+        decay: int = 7,
+        truncation: float = 0.05,
+        pasteurize: bool = True,
+        winsor_limit: float = 0.025,
+        buy_quantile: float = 0.70,
+        sell_quantile: float = 0.30,
+    ):
         self._symbols = symbols
+        self.DECAY = decay
+        self.TRUNCATION = truncation
+        self.PASTEURIZE = pasteurize
+        self.WINSOR_LIMIT = winsor_limit
+        self.BUY_QUANTILE = buy_quantile
+        self.SELL_QUANTILE = sell_quantile
         # Rolling history:  {symbol: {"opens": [...], "closes": [...], "subindustry": str}}
         self._history: Dict[str, Dict] = {}
 
