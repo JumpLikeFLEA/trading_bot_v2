@@ -58,7 +58,8 @@ class Engine:
         self.stop_event = stop_event
         self.pause_event = pause_event
         self.notifier = notifier
-        self._was_active: dict = {strategy.name: True for strategy in strategies}
+        now = datetime.now(timezone.utc)
+        self._was_active: dict = {strategy.name: strategy.is_active(now) for strategy in strategies}
 
     def run(self) -> None:
         while True:
@@ -130,7 +131,6 @@ class Engine:
             order = self.risk_manager.evaluate(signal, balance, current_price)
 
             if order is not None:
-                order.price = current_price
                 self.broker.place_order(order)
                 if self.notifier:
                     self.notifier.notify_order(order)
