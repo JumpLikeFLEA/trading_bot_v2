@@ -7,6 +7,7 @@ from adapters import TelegramListener, TelegramNotifier, Trading212Broker
 from core import Engine
 from core.strategy_factory import build_strategies
 from services import DataFeed, Metrics, Portfolio, RiskManager, load_config, load_secrets
+from services.risk_manager import MaxDailyLossRule, MaxSectorExposureRule, MaxSymbolExposureRule, NoDoublePositionRule
 from ui import Dashboard
 
 
@@ -86,7 +87,21 @@ def main():
     )
     metrics = Metrics()
     portfolio = Portfolio()
-    risk_manager = RiskManager(portfolio=portfolio)
+
+    risk_config = config.get("risk", {})
+    risk_manager = RiskManager(
+        portfolio=portfolio,
+        rules=[
+            NoDoublePositionRule(),
+            MaxSymbolExposureRule(max_pct=risk_config.get("max_symbol_exposure_pct", 0.05)),
+            MaxSectorExposureRule(
+                max_pct=risk_config.get("max_sector_exposure_pct", 0.20),
+                sector_map=data_feed.sector_map,
+            ),
+            MaxDailyLossRule(max_loss_pct=risk_config.get("max_daily_loss_pct", 0.03)),
+        ],
+        position_size_pct=risk_config.get("position_size_pct", 0.01),
+    )
     dashboard = Dashboard(metrics=metrics)
 
     # Start Telegram listener if notifier is enabled

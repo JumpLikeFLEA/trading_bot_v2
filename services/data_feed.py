@@ -26,6 +26,10 @@ class DataFeed:
                 logging.warning(f"Could not fetch subindustry for {symbol}: {e}")
                 self._subindustry_cache[symbol] = "Unknown"
 
+    @property
+    def sector_map(self) -> Dict[str, str]:
+        return dict(self._subindustry_cache)
+
     def get_data(self) -> Dict[str, Dict]:
         result = {}
         try:

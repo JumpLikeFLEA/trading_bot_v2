@@ -1,6 +1,12 @@
 {
   "symbols": ["AAPL","MSFT","GOOGL","AMZN","NVDA","META","TSLA","AMD","PLTR","BAC","F","INTC","T","PFE","XOM","SOFI","CCL","NIO","RIVN","SMCI"],
   "live": false,
+  "risk": {
+    "position_size_pct": 0.01,
+    "max_symbol_exposure_pct": 0.05,
+    "max_sector_exposure_pct": 0.20,
+    "max_daily_loss_pct": 0.03
+  },
   "notifier": {
     "provider": "telegram",
     "enabled": true
