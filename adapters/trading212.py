@@ -30,7 +30,6 @@ class Trading212Broker(Broker):
         response = requests.post(url, headers=self._headers, json=body)
         if response.status_code == 429:
             logging.warning(f"Rate limit hit for {path}")
-            return response
         logging.info(f"Response body: {response.text}")
         response.raise_for_status()
         return response

@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import logging
 import threading
 import time
@@ -54,6 +55,7 @@ class Engine:
         self.stop_event = stop_event
         self.pause_event = pause_event
         self.notifier = notifier
+        self._was_active: dict = {strategy.name: True for strategy in strategies}
 
     def run(self) -> None:
         while True:
@@ -67,29 +69,31 @@ class Engine:
                 continue
 
             try:
+                now = datetime.now(timezone.utc)
                 data = self.data_feed.get_data()
                 balance = self.broker.get_balance()
                 positions = self.broker.get_positions()
                 self.portfolio.update(positions)  # needs portfolio passed into Engine
 
                 for strategy in self.strategies:
-                    signals = strategy.on_data(data)
-                    for symbol, signal_data in data.items():
-                        current_price = signal_data["price"]
-                        for signal in signals:
-                            if signal.symbol != symbol:
-                                continue
-                            if self.dashboard is not None:
-                                self.dashboard.update_signal(symbol, signal.type, current_price)
-                            order = self.risk_manager.evaluate(signal, balance, current_price)
+                    is_active = strategy.is_active(now)
+                    was_active = self._was_active.get(strategy.name, True)
 
-                            if order is not None:
-                                self.broker.place_order(order)
-                                if self.notifier:
-                                    self.notifier.notify_order(order)
-                                self.metrics.record_trade(order)
-                                if self.dashboard is not None:
-                                    self.dashboard.update_last_order(order, current_price)
+                    if is_active and not was_active:
+                        # Transitioning from inactive to active
+                        self._was_active[strategy.name] = True
+                        signals = strategy.on_data(data)
+                        self._handle_signals(signals, data, balance)
+                    elif not is_active and was_active:
+                        # Transitioning from active to inactive
+                        deactivate_signals = strategy.on_deactivate(self.portfolio.get_all_positions())
+                        self._handle_signals(deactivate_signals, data, balance)
+                        self._was_active[strategy.name] = False
+                    elif is_active and was_active:
+                        # Still active, process normally
+                        signals = strategy.on_data(data)
+                        self._handle_signals(signals, data, balance)
+                    # else: was inactive and still inactive, skip
 
                 if self.dashboard is not None:
                     self.dashboard.increment_cycle()
@@ -101,3 +105,22 @@ class Engine:
                 if self.notifier:
                     self.notifier.notify_error(str(e))
                 time.sleep(self.interval)
+
+    def _handle_signals(self, signals, data, balance) -> None:
+        """Process signals: evaluate, place orders, notify, record metrics, update dashboard."""
+        for signal in signals:
+            if signal.symbol not in data:
+                continue
+            current_price = data[signal.symbol]["price"]
+
+            if self.dashboard is not None:
+                self.dashboard.update_signal(signal.symbol, signal.type, current_price)
+            order = self.risk_manager.evaluate(signal, balance, current_price)
+
+            if order is not None:
+                self.broker.place_order(order)
+                if self.notifier:
+                    self.notifier.notify_order(order)
+                self.metrics.record_trade(order)
+                if self.dashboard is not None:
+                    self.dashboard.update_last_order(order, current_price)
