@@ -20,6 +20,7 @@ class Order:
     symbol: str
     side: str
     quantity: float
+    price: float = 0.0
 
 
 @dataclass

@@ -22,7 +22,7 @@ class Dashboard:
             "symbol": order.symbol,
             "side": order.side,
             "quantity": order.quantity,
-            "price": order.price if hasattr(order, "price") and order.price else price,
+            "price": order.price,
             "timestamp": datetime.now().strftime("%H:%M:%S")
         })
 
@@ -58,8 +58,8 @@ class Dashboard:
     def get_summary(self) -> str:
         summary = self._metrics.summary()
         total_trades = summary.get("total_trades", 0)
-        portfolio_value = summary.get("portfolio_value", "N/A")
-        pnl = summary.get("pnl", "N/A")
+        portfolio_value = summary.get("portfolio_value", 0.0)
+        pnl = summary.get("pnl", 0.0)
         win_rate = self._get_win_rate(summary)
         uptime = self._get_uptime()
 
@@ -73,8 +73,8 @@ class Dashboard:
         lines.append(f"Cycles: {self._cycle_count}")
         lines.append(f"Trades: {total_trades}")
         lines.append(f"Win Rate: {win_rate}")
-        lines.append(f"Portfolio: {portfolio_value}")
-        lines.append(f"P&L: {pnl}")
+        lines.append(f"Portfolio: ${portfolio_value:,.2f}")
+        lines.append(f"P&L: ${pnl:+,.2f}")
         lines.append("")
 
         # Recent Orders

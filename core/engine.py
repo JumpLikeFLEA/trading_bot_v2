@@ -20,6 +20,9 @@ class Metrics(Protocol):
     def record_trade(self, order: Order) -> None:
         ...
 
+    def update_portfolio_snapshot(self, value: float, unrealized_pnl: float) -> None:
+        ...
+
 
 class Dashboard(Protocol):
     def update_last_order(self, order: Order) -> None:
@@ -73,7 +76,16 @@ class Engine:
                 data = self.data_feed.get_data()
                 balance = self.broker.get_balance()
                 positions = self.broker.get_positions()
-                self.portfolio.update(positions)  # needs portfolio passed into Engine
+                self.portfolio.update(positions)
+                portfolio_value = sum(
+                    p.quantity * data[p.symbol]["price"]
+                    for p in positions if p.symbol in data
+                )
+                unrealized_pnl = sum(
+                    (data[p.symbol]["price"] - p.entry_price) * p.quantity
+                    for p in positions if p.symbol in data
+                )
+                self.metrics.update_portfolio_snapshot(portfolio_value, unrealized_pnl)
 
                 for strategy in self.strategies:
                     is_active = strategy.is_active(now)
@@ -118,6 +130,7 @@ class Engine:
             order = self.risk_manager.evaluate(signal, balance, current_price)
 
             if order is not None:
+                order.price = current_price
                 self.broker.place_order(order)
                 if self.notifier:
                     self.notifier.notify_order(order)
