@@ -145,6 +145,24 @@ Run: `python main.py --strategy OpenCloseRankStrategy`
 ```
 Run: `python main.py --strategy VWAPEMAStrategy`
 
+## Universe Updater
+
+Keeps universe JSON files fresh by fetching current index constituents from Wikipedia and validating them against yfinance.
+
+**Source:** Wikipedia (no API key required)
+
+**Usage:**
+```bash
+python scripts/update_universe.py --universe sp500
+```
+
+**Allowed values for `--universe`:** `sp500`, `nasdaq100`, `dowjones`
+
+**Notes:**
+- Overwrites the existing universe file
+- Tickers that fail yfinance validation are dropped and logged
+- Run periodically to keep universes current, e.g. after quarterly index rebalancing
+
 ## Telegram Commands
 
 When the Telegram notifier is enabled, you can control the bot remotely:

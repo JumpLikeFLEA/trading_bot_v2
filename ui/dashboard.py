@@ -91,14 +91,18 @@ class Dashboard:
         lines.append("")
 
         # Active Signals
-        lines.append("Active Signals:")
-        if self._signals:
-            for symbol, (signal, price) in self._signals.items():
-                colored_signal = self._color_signal(signal)
-                reset = "\033[0m"
-                lines.append(f"  {symbol}: {colored_signal}{reset}")
+        buys = sum(1 for signal, _ in self._signals.values() if signal == SignalType.BUY)
+        sells = sum(1 for signal, _ in self._signals.values() if signal == SignalType.SELL)
+        holds = sum(1 for signal, _ in self._signals.values() if signal == SignalType.HOLD)
+        lines.append(f"Active Signals: {buys} BUY | {sells} SELL | {holds} HOLD")
+        actionable = [(sym, sig) for sym, (sig, _) in self._signals.items()
+                      if sig in (SignalType.BUY, SignalType.SELL)]
+        if actionable:
+            entries = [f"{sym}:{sig.value.upper()}".ljust(14) for sym, sig in actionable]
+            for i in range(0, len(entries), 3):
+                lines.append("  " + " ".join(entries[i:i + 3]))
         else:
-            lines.append("  No signals yet")
+            lines.append("  No actionable signals")
 
         return "\n".join(lines)
 

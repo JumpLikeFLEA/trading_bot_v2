@@ -15,7 +15,7 @@ class TelegramNotifier(Notifier):
 
     def _send(self, message: str) -> None:
         try:
-            payload = {"chat_id": self._chat_id, "text": message}
+            payload = {"chat_id": self._chat_id, "text": message, "parse_mode": "Markdown"}
             requests.post(self._base_url, json=payload)
         except Exception as e:
             logging.warning(f"Failed to send Telegram notification: {e}")
@@ -34,4 +34,5 @@ class TelegramNotifier(Notifier):
     def notify_summary(self, summary: str) -> None:
         # Strip ANSI escape codes for Telegram
         clean_summary = re.sub(r'\033\[[0-9;]*m', '', summary)
-        self._send(clean_summary)
+        formatted = f"```\n{clean_summary}\n```"
+        self._send(formatted)
