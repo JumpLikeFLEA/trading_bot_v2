@@ -116,6 +116,7 @@ def main():
     portfolio = Portfolio()
 
     risk_config = config.get("risk", {})
+    max_position_pct = risk_config.get("max_position_pct", 0.01)
     risk_manager = RiskManager(
         portfolio=portfolio,
         rules=[
@@ -128,6 +129,7 @@ def main():
             MaxDailyLossRule(max_loss_pct=risk_config.get("max_daily_loss_pct", 0.03)),
         ],
         position_size_pct=risk_config.get("position_size_pct", 0.01),
+        max_position_pct=max_position_pct,
     )
     dashboard = Dashboard(metrics=metrics)
 

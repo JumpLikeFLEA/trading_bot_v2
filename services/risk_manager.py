@@ -115,10 +115,13 @@ class RiskManager:
         portfolio: Portfolio,
         rules: List[RiskRule],
         position_size_pct: float = 0.01,
+        max_position_pct: float = 0.01,
     ):
         self._portfolio = portfolio
         self._rules = rules
         self._position_size_pct = position_size_pct
+        self._max_position_pct = max_position_pct
+        self._pending: set = set()
 
     def evaluate(self, signal: Signal, balance: float, price: float) -> Optional[Order]:
         if signal.type == SignalType.HOLD:
@@ -128,15 +131,26 @@ class RiskManager:
             if not rule.check(signal, balance, price, self._portfolio):
                 return None
 
+        if signal.type == SignalType.BUY:
+            if signal.symbol in self._pending:
+                logging.warning(f"Order already pending for {signal.symbol}, skipping")
+                return None
+
         if signal.type == SignalType.SELL:
             position = self._portfolio.get_position(signal.symbol)
             quantity = position.quantity  # sell exactly what is held
         else:
-            quantity = (balance * self._position_size_pct) / price
+            quantity = (balance * self._max_position_pct) / price
         side = "buy" if signal.type == SignalType.BUY else "sell"
         order = Order(symbol=signal.symbol, side=side, quantity=quantity, price=price)
 
         for rule in self._rules:
             rule.on_order_placed(order)
 
+        if signal.type == SignalType.BUY:
+            self._pending.add(signal.symbol)
+
         return order
+
+    def clear_pending(self) -> None:
+        self._pending.clear()

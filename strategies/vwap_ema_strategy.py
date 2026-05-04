@@ -1,5 +1,5 @@
 import logging
-from datetime import time
+from datetime import datetime, time
 from typing import Any, Dict, List, Optional
 from zoneinfo import ZoneInfo
 
@@ -80,6 +80,7 @@ class VWAPEMAStrategy(Strategy):
         highs = values.get("highs")
         lows = values.get("lows")
         volumes = values.get("volumes")
+        timestamps = values.get("timestamps", [])
 
         # Guard: need enough bars for the slow EMA + 1 previous bar
         min_bars = self._slow + 1
@@ -90,7 +91,26 @@ class VWAPEMAStrategy(Strategy):
             logging.warning(f"[{self.name}] Insufficient data for {symbol}, emitting HOLD")
             return Signal(symbol=symbol, type=SignalType.HOLD)
 
-        vwap = self._calculate_vwap(closes, highs, lows, volumes)
+        et_tz = ZoneInfo("America/New_York")
+        today = datetime.now(et_tz).date()
+        today_indices = [
+            i for i, ts in enumerate(timestamps)
+            if ts.astimezone(et_tz).date() == today
+        ]
+        if not today_indices:
+            logging.warning(f"[{self.name}] No today's bars for {symbol}, emitting HOLD")
+            return Signal(symbol=symbol, type=SignalType.HOLD)
+
+        today_closes = [closes[i] for i in today_indices]
+        today_highs = [highs[i] for i in today_indices]
+        today_lows = [lows[i] for i in today_indices]
+        today_volumes = [volumes[i] for i in today_indices]
+
+        if len(today_closes) == 0:
+            logging.warning(f"[{self.name}] No today's bars for {symbol}, emitting HOLD")
+            return Signal(symbol=symbol, type=SignalType.HOLD)
+
+        vwap = self._calculate_vwap(today_closes, today_highs, today_lows, today_volumes)
         if vwap is None:
             logging.warning(f"[{self.name}] VWAP calculation failed for {symbol}, emitting HOLD")
             return Signal(symbol=symbol, type=SignalType.HOLD)

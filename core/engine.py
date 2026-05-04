@@ -114,6 +114,7 @@ class Engine:
                     self.dashboard.increment_cycle()
                     self.dashboard._render()
 
+                self.risk_manager.clear_pending()
                 time.sleep(self.interval)
             except Exception as e:
                 logging.exception("Error in engine loop")

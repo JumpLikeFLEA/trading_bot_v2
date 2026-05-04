@@ -49,18 +49,23 @@ class DataFeed:
             # Single ticker case: yfinance returns flat DataFrame
             if len(self._symbols) == 1:
                 symbol = self._symbols[0]
-                closes = data["Close"].dropna().tolist()
-                if len(closes) == 0:
+                clean = data[["Open", "High", "Low", "Close", "Volume"]].dropna()
+                if len(clean) == 0:
                     logging.warning(f"No data for {symbol}, skipping")
                     return result
 
                 result[symbol] = {
-                    "price": closes[-1],
-                    "closes": closes,
-                    "opens": data["Open"].dropna().tolist(),
-                    "highs": data["High"].dropna().tolist(),
-                    "lows": data["Low"].dropna().tolist(),
-                    "volumes": data["Volume"].dropna().tolist(),
+                    "price": clean["Close"].iloc[-1],
+                    "closes": clean["Close"].tolist(),
+                    "opens": clean["Open"].tolist(),
+                    "highs": clean["High"].tolist(),
+                    "lows": clean["Low"].tolist(),
+                    "volumes": clean["Volume"].tolist(),
+                    "timestamps": (
+                        clean.index.tz_localize("UTC").tolist()
+                        if clean.index.tzinfo is None
+                        else clean.index.tz_convert("UTC").tolist()
+                    ),
                     "subindustry": self._subindustry_cache.get(symbol, "Unknown")
                 }
                 return result
@@ -73,18 +78,23 @@ class DataFeed:
                         continue
 
                     ticker_data = data[symbol]
-                    closes = ticker_data["Close"].dropna().tolist()
-                    if len(closes) == 0:
+                    clean = ticker_data[["Open", "High", "Low", "Close", "Volume"]].dropna()
+                    if len(clean) == 0:
                         logging.warning(f"No data for {symbol}, skipping")
                         continue
 
                     result[symbol] = {
-                        "price": closes[-1],
-                        "closes": closes,
-                        "opens": ticker_data["Open"].dropna().tolist(),
-                        "highs": ticker_data["High"].dropna().tolist(),
-                        "lows": ticker_data["Low"].dropna().tolist(),
-                        "volumes": ticker_data["Volume"].dropna().tolist(),
+                        "price": clean["Close"].iloc[-1],
+                        "closes": clean["Close"].tolist(),
+                        "opens": clean["Open"].tolist(),
+                        "highs": clean["High"].tolist(),
+                        "lows": clean["Low"].tolist(),
+                        "volumes": clean["Volume"].tolist(),
+                        "timestamps": (
+                            clean.index.tz_localize("UTC").tolist()
+                            if clean.index.tzinfo is None
+                            else clean.index.tz_convert("UTC").tolist()
+                        ),
                         "subindustry": self._subindustry_cache.get(symbol, "Unknown")
                     }
                 except Exception as e:

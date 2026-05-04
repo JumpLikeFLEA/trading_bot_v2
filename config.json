@@ -5,14 +5,15 @@
     "position_size_pct": 0.01,
     "max_symbol_exposure_pct": 0.05,
     "max_sector_exposure_pct": 0.20,
-    "max_daily_loss_pct": 0.03
+    "max_daily_loss_pct": 0.03,
+    "max_position_pct": 0.01
   },
   "notifier": {
     "provider": "telegram",
     "enabled": true
   },
   "data_feed": {
-    "period": "3mo",
+    "period": "2d",
     "period_long": "1y",
     "interval": "1h"
   },
