@@ -47,7 +47,14 @@ def main() -> None:
     parser.add_argument("--universe", required=True, choices=list(SOURCES), help="Universe to update")
     args = parser.parse_args()
 
-    symbols = fetch_symbols(args.universe)
+    raw_symbols = fetch_symbols(args.universe)
+
+    symbols: list[str] = []
+    for raw in raw_symbols:
+        normalized = raw.replace(".", "-")
+        if normalized != raw:
+            logging.info(f"Normalized ticker {raw} → {normalized}")
+        symbols.append(normalized)
 
     valid: list[str] = []
     dropped: list[str] = []
